@@ -130,6 +130,21 @@ async function deleteMessage(chat_id, message_id) {
   });
 }
 
+async function tellSlack(text) {
+  if (!SLACK_NOTIFICATION_ENDPOINT) return;
+  if (typeof text !== "string") {
+    text = JSON.stringify(text);
+  }
+  return await fetch(SLACK_NOTIFICATION_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-type": "application/json",
+    },
+    body: JSON.stringify({
+      text,
+    }),
+  });
+}
 /**
  * Respond to the request
  * @param {Request} request
