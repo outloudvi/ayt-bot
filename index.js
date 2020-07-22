@@ -2,6 +2,8 @@ addEventListener("fetch", (event) => {
   event.respondWith(handleRequest(event.request));
 });
 
+
+const data_compoundSurnames = require("./data/compound_surnames.json");
 const BOT_KEY = `${BOT_ID}:${BOT_TOKEN}`;
 const ALLOW_USER_WITH_USERNAME = true;
 const PRESERVE_TEXT = false;
@@ -44,6 +46,11 @@ function bayes(str) {
 function suspicious_name_filter(fullname) {
   if (fullname.trim().match(/^[A-Z][a-z]+$/) !== null) return true;
   if (fullname.trim().match(/^[\u4e00-\u9fa5]{2,3}$/) !== null) return true;
+  if (fullname.length === 4) {
+    for (const i of data_compoundSurnames) {
+      if (fullname.startsWith(i)) return true;
+    }
+  }
   return false;
 }
 
