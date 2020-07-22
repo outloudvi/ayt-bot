@@ -187,6 +187,17 @@ async function checkDeleteMessage(message) {
   }
 }
 
+async function cleanForwardedMessagesByRU(message) {
+  if (!message.forwarded_from) return;
+  const usersStatus = hasBadUser([message.from]);
+  if (
+    usersStatus[0] &&
+    (usersStatus[0].bayes > BAYES_THERESHOLD || usersStatus[0].restrict)
+  ) {
+    await deleteMessage(message.chat.id, message.message_id);
+  }
+}
+
 /**
  * Respond to the request
  * @param {Request} request
@@ -214,7 +225,7 @@ async function handler(request) {
         );
         await sendMessage(
           body.message.chat.id,
-          `由于「可疑的用户名」，${i.name} (id: ${i.id}) 已被设置为半保护模式，只能发送文字消息。很抱歉给您带来的不便。\n*致管理员：在确认用户真实性后，请尽快解除其半保护模式。*`,
+          `由于「可疑的用户名」，${i.name} (id: ${i.id}) 已被设置为半保护模式，只能发送非转发性文字消息。很抱歉给您带来的不便。\n*致管理员：在确认用户真实性后，请尽快解除其半保护模式。*`,
           true
         );
         await deleteMessage(body.message.chat.id, body.message.message_id);
@@ -232,6 +243,8 @@ async function handler(request) {
   }
   // /delete
   await checkDeleteMessage(body.message);
+  // Forwarded messages
+  await cleanForwardedMessagesByRU(body.message);
   return;
 }
 
