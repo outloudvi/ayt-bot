@@ -1,0 +1,9 @@
+{
+  "name": "ayt-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com:outloudvi/ayt-bot",
+  "author": "Outvi V <oss@outv.im>",
+  "license": "MIT",
+  "private": true
+}
