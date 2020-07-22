@@ -1,0 +1,9 @@
+name = "ayt-bot"
+type = "webpack"
+account_id = ""
+workers_dev = true
+route = ""
+zone_id = ""
+
+[env.prod.vars]
+BOT_KEY = "BOT_KEY"
