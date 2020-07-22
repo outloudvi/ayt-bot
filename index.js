@@ -91,7 +91,7 @@ async function sendMessage(
   });
 }
 
-async function restrictMember(chat_id, user_id, text_only = PRESERVE_TEXT) {
+async function restrictMember(chat_id, user_id, text_only = true) {
   return await fetch(
     `https://api.telegram.org/bot${BOT_KEY}/restrictChatMember`,
     {
@@ -145,6 +145,41 @@ async function tellSlack(text) {
     }),
   });
 }
+
+function tooOld(message) {
+  return new Date() / 1000 - message.date >= OLD_MESSAGE_TIMEOUT;
+}
+
+async function checkDeleteMessage(message) {
+  if (!message.reply_to_message) return;
+  const targetMessage = message.reply_to_message;
+  if (!targetMessage.from.id === BOT_ID) return;
+  if (message.text.match(/^\/delete/) === null) return;
+  if (tooOld(targetMessage)) {
+    await sendMessage(
+      ADMIN_UID,
+      JSON.stringify({
+        reason: "delmsg-good",
+        id: targetMessage.message_id,
+        text: targetMessage.text,
+        chat: targetMessage.chat.id,
+      })
+    );
+    const rep = await deleteMessage(
+      message.chat.id,
+      targetMessage.message_id
+    ).then((x) => x.json());
+    if (!rep.ok) {
+      sendMessage(
+        message.chat.id,
+        "Message expired but not deleted, possibly because it was sent too long time ago.",
+        true,
+        message.message_id
+      );
+    }
+  }
+}
+
 /**
  * Respond to the request
  * @param {Request} request
@@ -155,25 +190,28 @@ async function handler(request) {
     return {};
   });
   if (!body.message) return;
-  if (!body.message.new_chat_members) return;
-  let resp;
-  const usersStatus = hasBadUser(body.message.new_chat_members);
-  for (const i of usersStatus) {
-    if (i.bayes > BAYES_THERESHOLD) {
-      resp = await deleteMessage(
-        body.message.chat.id,
-        body.message.message_id
-      ).then((x) => x.json());
-    }
-    if (i.restrict) {
-      resp = await restrictMember(body.message.chat.id, i.id).then((x) =>
-        x.json()
-      );
-      await sendMessage(
-        body.message.chat.id,
-        `由于「可疑的用户名」，${i.name} (id: ${i.id}) 已被设置为半保护模式，只能发送文字消息。很抱歉给您带来的不便。\n*致管理员：在确认用户真实性后，请尽快解除其半保护模式。*`,
-        true
-      );
+  if (body.message.new_chat_members) {
+    let resp;
+    const usersStatus = hasBadUser(body.message.new_chat_members);
+    for (const i of usersStatus) {
+      if (i.bayes > BAYES_THERESHOLD) {
+        resp = await deleteMessage(
+          body.message.chat.id,
+          body.message.message_id
+        ).then((x) => x.json());
+        resp = await restrictMember(body.message.chat.id, i.id, PRESERVE_TEXT);
+      }
+      if (i.restrict) {
+        resp = await restrictMember(body.message.chat.id, i.id).then((x) =>
+          x.json()
+        );
+        await sendMessage(
+          body.message.chat.id,
+          `由于「可疑的用户名」，${i.name} (id: ${i.id}) 已被设置为半保护模式，只能发送文字消息。很抱歉给您带来的不便。\n*致管理员：在确认用户真实性后，请尽快解除其半保护模式。*`,
+          true
+        );
+        await deleteMessage(body.message.chat.id, body.message.message_id);
+      }
     }
     await sendMessage(
       ADMIN_UID,
@@ -185,6 +223,9 @@ async function handler(request) {
       })
     );
   }
+  // /delete
+  await checkDeleteMessage(body.message);
+  return;
 }
 
 async function handleRequest(request) {
