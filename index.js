@@ -163,15 +163,6 @@ async function checkDeleteMessage(message) {
   if (!targetMessage.from.id === BOT_ID) return;
   if (message.text.match(/^\/delete/) === null) return;
   if (tooOld(targetMessage)) {
-    await sendMessage(
-      ADMIN_UID,
-      JSON.stringify({
-        reason: "delmsg-good",
-        id: targetMessage.message_id,
-        text: targetMessage.text,
-        chat: targetMessage.chat.id,
-      })
-    );
     const rep = await deleteMessage(
       message.chat.id,
       targetMessage.message_id
@@ -194,7 +185,17 @@ async function cleanForwardedMessagesByRU(message) {
     usersStatus[0] &&
     (usersStatus[0].bayes > BAYES_THERESHOLD || usersStatus[0].restrict)
   ) {
-    await deleteMessage(message.chat.id, message.message_id);
+    const rep = await deleteMessage(message.chat.id, message.message_id);
+    await sendMessage(
+      ADMIN_UID,
+      JSON.stringify({
+        reason: "delfwdmsg",
+        id: targetMessage.message_id,
+        text: targetMessage.text,
+        chat: targetMessage.chat.id,
+        ok: rep.ok,
+      })
+    );
   }
 }
 
