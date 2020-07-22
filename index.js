@@ -2,6 +2,7 @@ addEventListener("fetch", (event) => {
   event.respondWith(handleRequest(event.request));
 });
 
+const BOT_KEY = `${BOT_ID}:${BOT_TOKEN}`;
 const ALLOW_USER_WITH_USERNAME = true;
 const PRESERVE_TEXT = false;
 const BAYES_THERESHOLD = 0.75;
@@ -67,7 +68,13 @@ function hasBadUser(users) {
   return results;
 }
 
-async function sendMessage(chat_id, text, disable_notification = false) {
+async function sendMessage(
+  chat_id,
+  text,
+  disable_notification = false,
+  reply_to_message_id = -1
+) {
+  if (!chat_id) return;
   return await fetch(`https://api.telegram.org/bot${BOT_KEY}/sendMessage`, {
     method: "POST",
     headers: {
@@ -77,6 +84,8 @@ async function sendMessage(chat_id, text, disable_notification = false) {
       chat_id,
       text,
       parse_mode: "Markdown",
+      reply_to_message_id:
+        reply_to_message_id !== -1 ? reply_to_message_id : undefined,
       disable_notification,
     }),
   });
@@ -151,10 +160,29 @@ async function handler(request) {
         true
       );
     }
+    await sendMessage(
+      ADMIN_UID,
+      JSON.stringify({
+        groupId: body.message.chat.id,
+        groupName: body.message.chat.title,
+        results: usersStatus,
+        resp,
+      })
+    );
   }
 }
 
 async function handleRequest(request) {
-  await handler(request);
+  try {
+    await handler(request);
+  } catch (e) {
+    await sendMessage(
+      ADMIN_UID,
+      JSON.stringify({
+        error: true,
+        reason: String(e),
+      })
+    );
+  }
   return new Response("OK", { status: 200 });
 }

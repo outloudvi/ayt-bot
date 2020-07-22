@@ -6,4 +6,6 @@ route = ""
 zone_id = ""
 
 [env.prod.vars]
-BOT_KEY = "BOT_KEY"
+ADMIN_UID = ""
+BOT_ID = ""
+BOT_TOKEN = ""
