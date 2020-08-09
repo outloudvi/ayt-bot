@@ -27,7 +27,7 @@ const BAD_WORDS = {
   0.3: ['出售', '联系', '私聊', '加好友', '头像']
 }
 
-function bayes (str) {
+function bayes(str) {
   let ret = 0
   for (const [key, val] of Object.entries(BAD_WORDS)) {
     for (const word of val) {
@@ -42,7 +42,7 @@ function bayes (str) {
  * @param {string} fullname
  * @returns {boolean}
  */
-function suspicious_name_filter (fullname) {
+function suspicious_name_filter(fullname) {
   if (fullname.trim().match(/^[A-Z][a-z]+$/) !== null) return true
   if (fullname.trim().match(/^[\u4e00-\u9fa5]{2,3}$/) !== null) return true
   if (fullname.length === 4) {
@@ -53,7 +53,7 @@ function suspicious_name_filter (fullname) {
   return false
 }
 
-function hasBadUser (users) {
+function hasBadUser(users) {
   const results = []
   for (const i of users) {
     let desc = (i.first_name || '') + (i.last_name || '')
@@ -68,13 +68,13 @@ function hasBadUser (users) {
       restrict:
         ALLOW_USER_WITH_USERNAME && i.username
           ? false
-          : suspicious_name_filter(fullname)
+          : suspicious_name_filter(fullname),
     })
   }
   return results
 }
 
-async function sendMessage (
+async function sendMessage(
   chat_id,
   text,
   disable_notification = false,
@@ -84,7 +84,7 @@ async function sendMessage (
   return await fetch(`https://api.telegram.org/bot${BOT_KEY}/sendMessage`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json; charset=utf-8'
+      'Content-Type': 'application/json; charset=utf-8',
     },
     body: JSON.stringify({
       chat_id,
@@ -92,18 +92,18 @@ async function sendMessage (
       parse_mode: 'Markdown',
       reply_to_message_id:
         reply_to_message_id !== -1 ? reply_to_message_id : undefined,
-      disable_notification
-    })
+      disable_notification,
+    }),
   })
 }
 
-async function restrictMember (chat_id, user_id, text_only = true) {
+async function restrictMember(chat_id, user_id, text_only = true) {
   return await fetch(
     `https://api.telegram.org/bot${BOT_KEY}/restrictChatMember`,
     {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json; charset=utf-8'
+        'Content-Type': 'application/json; charset=utf-8',
       },
       body: JSON.stringify({
         chat_id,
@@ -116,27 +116,27 @@ async function restrictMember (chat_id, user_id, text_only = true) {
           can_add_web_page_previews: false,
           can_change_info: false,
           can_invite_users: false,
-          can_pin_messages: false
-        }
-      })
+          can_pin_messages: false,
+        },
+      }),
     }
   )
 }
 
-async function deleteMessage (chat_id, message_id) {
+async function deleteMessage(chat_id, message_id) {
   return await fetch(`https://api.telegram.org/bot${BOT_KEY}/deleteMessage`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json; charset=utf-8'
+      'Content-Type': 'application/json; charset=utf-8',
     },
     body: JSON.stringify({
       chat_id,
-      message_id
-    })
+      message_id,
+    }),
   })
 }
 
-async function tellSlack (text) {
+async function tellSlack(text) {
   if (!SLACK_NOTIFICATION_ENDPOINT) return
   if (typeof text !== 'string') {
     text = JSON.stringify(text)
@@ -144,19 +144,19 @@ async function tellSlack (text) {
   return await fetch(SLACK_NOTIFICATION_ENDPOINT, {
     method: 'POST',
     headers: {
-      'Content-type': 'application/json'
+      'Content-type': 'application/json',
     },
     body: JSON.stringify({
-      text
-    })
+      text,
+    }),
   })
 }
 
-function tooOld (message) {
+function tooOld(message) {
   return new Date() / 1000 - message.date >= OLD_MESSAGE_TIMEOUT
 }
 
-async function checkDeleteMessage (message) {
+async function checkDeleteMessage(message) {
   if (!message.reply_to_message) return
   const targetMessage = message.reply_to_message
   if (!targetMessage.from.id === BOT_ID) return
@@ -178,7 +178,7 @@ async function checkDeleteMessage (message) {
   }
 }
 
-async function cleanForwardedMessagesByRU (message) {
+async function cleanForwardedMessagesByRU(message) {
   if (!message.forwarded_from) return
   const usersStatus = hasBadUser([message.from])
   if (
@@ -193,7 +193,7 @@ async function cleanForwardedMessagesByRU (message) {
         id: targetMessage.message_id,
         text: targetMessage.text,
         chat: targetMessage.chat.id,
-        ok: rep.ok
+        ok: rep.ok,
       })
     )
   }
@@ -203,7 +203,7 @@ async function cleanForwardedMessagesByRU (message) {
  * Respond to the request
  * @param {Request} request
  */
-async function handler (request) {
+async function handler(request) {
   if (request.method != 'POST') return
   const body = await request.json().catch((x) => {
     return {}
@@ -238,7 +238,7 @@ async function handler (request) {
         groupId: body.message.chat.id,
         groupName: body.message.chat.title,
         results: usersStatus,
-        resp
+        resp,
       })
     )
   }
@@ -248,7 +248,7 @@ async function handler (request) {
   await cleanForwardedMessagesByRU(body.message)
 }
 
-async function handleRequest (request) {
+async function handleRequest(request) {
   try {
     await handler(request)
   } catch (e) {
@@ -256,7 +256,7 @@ async function handleRequest (request) {
       ADMIN_UID,
       JSON.stringify({
         error: true,
-        reason: String(e)
+        reason: String(e),
       })
     )
   }
