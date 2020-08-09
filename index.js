@@ -172,7 +172,7 @@ async function checkDeleteMessage(message) {
   const targetMessage = message.reply_to_message
   if (!targetMessage.from.id === BOT_ID) return
   if (!message.text) return
-  if (message.text.match(/^\/delete/) === null) return
+  if ((message.text || '').match(/^\/delete/) === null) return
   if (tooOld(targetMessage)) {
     const rep = await deleteMessage(
       message.chat.id,
