@@ -190,7 +190,7 @@ async function checkDeleteMessage(message) {
 }
 
 async function cleanForwardedMessagesByRU(message) {
-  if (!message.forwarded_from) return
+  if (!message.forward_from) return
   const usersStatus = hasBadUser([message.from])
   if (
     usersStatus[0] &&
@@ -201,9 +201,9 @@ async function cleanForwardedMessagesByRU(message) {
       ADMIN_UID,
       JSON.stringify({
         reason: 'delfwdmsg',
-        id: targetMessage.message_id,
-        text: targetMessage.text,
-        chat: targetMessage.chat.id,
+        id: message.message_id,
+        text: message.text,
+        chat: message.chat.id,
         ok: rep.ok,
       })
     )
