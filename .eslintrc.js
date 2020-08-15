@@ -1,14 +1,13 @@
 module.exports = {
   env: {
     commonjs: true,
-    es2020: true
+    es2020: true,
   },
-  extends: [
-    'standard'
-  ],
+  extends: ['standard'],
   parserOptions: {
-    ecmaVersion: 11
+    ecmaVersion: 11,
   },
   rules: {
-  }
+    camelcase: 0,
+  },
 }
