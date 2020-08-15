@@ -2,51 +2,12 @@ addEventListener('fetch', (event) => {
   event.respondWith(handleRequest(event.request))
 })
 
+const { bayes } = require('./lib')
 const data_compoundSurnames = require('./data/compound_surnames.json')
 const BOT_KEY = `${BOT_ID}:${BOT_TOKEN}`
 const ALLOW_USER_WITH_USERNAME = true
 const PRESERVE_TEXT = false
 const BAYES_THERESHOLD = 0.75
-
-const BAD_WORDS = {
-  0.8: ['炸群', '__asm__test__key__'],
-  0.5: [
-    '电报',
-    '土豆',
-    '非小号',
-    '微信：',
-    '在线',
-    '咨询',
-    '增粉',
-    'mytoken',
-    '专卖',
-    '莆田',
-    '推广',
-    '热搜',
-    '承接',
-  ],
-  0.3: [
-    '出售',
-    '联系',
-    '私聊',
-    '加好友',
-    '头像',
-    '推特',
-    '脸书',
-    '油管',
-    '业务',
-  ],
-}
-
-function bayes(str) {
-  let ret = 0
-  for (const [key, val] of Object.entries(BAD_WORDS)) {
-    for (const word of val) {
-      if (str.includes(word)) ret += Number(key)
-    }
-  }
-  return ret
-}
 
 /**
  *
