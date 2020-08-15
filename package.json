@@ -6,7 +6,12 @@
   "author": "Outvi V <oss@outv.im>",
   "license": "MIT",
   "private": true,
-  "dependencies": {},
+  "scripts": {
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "normalize-diacritics": "^2.11.1"
+  },
   "devDependencies": {
     "eslint": "^7.5.0",
     "eslint-config-standard": "^14.1.1",
