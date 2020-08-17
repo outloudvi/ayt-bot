@@ -4,6 +4,7 @@ addEventListener('fetch', (event) => {
 
 const { bayes } = require('./lib')
 const data_compoundSurnames = require('./data/compound_surnames.json')
+const data_lastnames = require('./data/last_names.json')
 const BOT_KEY = `${BOT_ID}:${BOT_TOKEN}`
 const ALLOW_USER_WITH_USERNAME = true
 const PRESERVE_TEXT = false
@@ -20,6 +21,12 @@ function suspicious_name_filter(fullname) {
   if (fullname.length === 4) {
     for (const i of data_compoundSurnames) {
       if (fullname.startsWith(i)) return true
+    }
+    if (
+      data_lastnames.includes(fullname[0]) &&
+      data_lastnames.includes(fullname[1])
+    ) {
+      return true
     }
   }
   return false
