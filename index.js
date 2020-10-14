@@ -6,9 +6,12 @@ const { bayes } = require('./lib')
 const data_compoundSurnames = require('./data/compound_surnames.json')
 const data_lastnames = require('./data/last_names.json')
 const BOT_KEY = `${BOT_ID}:${BOT_TOKEN}`
-const ALLOW_USER_WITH_USERNAME = true
 const PRESERVE_TEXT = false
 const BAYES_THERESHOLD = 0.75
+
+// Note: settings here doesn NOT save users from the bayes filter.
+const ALLOW_USER_WITH_USERNAME = true
+const ALLOW_USER_WITH_AVATAR = true
 
 /**
  *
@@ -32,7 +35,7 @@ function suspicious_name_filter(fullname) {
   return false
 }
 
-function hasBadUser(users) {
+async function hasBadUser(users) {
   const results = []
   for (const i of users) {
     let desc = (i.first_name || '') + (i.last_name || '')
@@ -40,14 +43,16 @@ function hasBadUser(users) {
     desc = desc.replace(/[. -_·\/\\]/g, '')
     desc = desc.toLowerCase()
     const bay = bayes(desc)
+    const suspName = suspicious_name_filter(fullname)
+    let restrict = ALLOW_USER_WITH_USERNAME && i.username ? false : suspName
+    if (restrict && ALLOW_USER_WITH_AVATAR) {
+      restrict = !(await hasProfilePhoto(i.id))
+    }
     results.push({
       id: i.id,
       name: fullname,
       bayes: bay,
-      restrict:
-        ALLOW_USER_WITH_USERNAME && i.username
-          ? false
-          : suspicious_name_filter(fullname),
+      restrict,
     })
   }
   return results
@@ -74,6 +79,23 @@ async function sendMessage(
       disable_notification,
     }),
   })
+}
+
+async function hasProfilePhoto(user_id) {
+  const items = await fetch(
+    `https://api.telegram.org/bot${BOT_KEY}/getUserProfilePhotos`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+      body: JSON.stringify({
+        user_id,
+        limit: 1,
+      }),
+    }
+  ).then((x) => x.json())
+  return items.result.total_count > 0
 }
 
 async function restrictMember(chat_id, user_id, text_only = true) {
@@ -190,7 +212,7 @@ async function handler(request) {
   if (!body.message) return
   if (body.message.new_chat_members) {
     let resp
-    const usersStatus = hasBadUser(body.message.new_chat_members)
+    const usersStatus = await hasBadUser(body.message.new_chat_members)
     for (const i of usersStatus) {
       if (i.bayes > BAYES_THERESHOLD) {
         resp = await deleteMessage(
