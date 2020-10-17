@@ -11,7 +11,7 @@ const BAYES_THERESHOLD = 0.75
 
 // Note: settings here doesn NOT save users from the bayes filter.
 const ALLOW_USER_WITH_USERNAME = true
-const ALLOW_USER_WITH_AVATAR = true
+const ALLOW_USER_WITH_AVATAR = false
 
 /**
  *
