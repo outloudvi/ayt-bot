@@ -2,6 +2,7 @@ addEventListener('fetch', (event) => {
   event.respondWith(handleRequest(event.request))
 })
 
+const whitelist = require('./data/whitelist.json')
 const { bayes } = require('./lib')
 const data_compoundSurnames = require('./data/compound_surnames.json')
 const data_lastnames = require('./data/last_names.json')
@@ -243,6 +244,7 @@ async function handler(request) {
       })
     )
   }
+  if (whitelist.includes(body.message.from.id)) return
   // /delete
   await checkDeleteMessage(body.message)
   // Forwarded messages
