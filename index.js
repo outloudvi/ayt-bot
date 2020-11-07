@@ -180,7 +180,7 @@ async function checkDeleteMessage(message) {
 }
 
 async function cleanForwardedMessagesByRU(message) {
-  if (!message.forward_from) return
+  if (!message.forward_from && !message.forward_from_chat) return
   const usersStatus = hasBadUser([message.from])
   if (
     usersStatus[0] &&
