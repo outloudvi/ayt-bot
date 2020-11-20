@@ -17,6 +17,10 @@ const BAD_WORDS = {
     '热搜',
     '承接',
     '客服',
+    'group',
+    'private',
+    'telegram',
+    'member'
   ],
   0.3: [
     '出售',
