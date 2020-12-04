@@ -20,7 +20,7 @@ const BAD_WORDS = {
     'group',
     'private',
     'telegram',
-    'member'
+    'member',
   ],
   0.3: [
     '出售',
@@ -57,4 +57,18 @@ function bayes(str) {
   return ret
 }
 
-module.exports = { bayes }
+function getFullName(user) {
+  return (user.first_name || '') + (user.last_name || '')
+}
+
+function getMessageSourceTitle(message) {
+  if (message.forward_from) {
+    return getFullName(message.forward_from)
+  } else if (message.forward_from_chat) {
+    return message.forward_from_chat.title || ''
+  } else {
+    return ''
+  }
+}
+
+module.exports = { bayes, getFullName, getMessageSourceTitle }

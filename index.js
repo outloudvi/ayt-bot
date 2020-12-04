@@ -3,7 +3,7 @@ addEventListener('fetch', (event) => {
 })
 
 const whitelist = require('./data/whitelist.json')
-const { bayes } = require('./lib')
+const { bayes, getFullName, getMessageSourceTitle } = require('./lib')
 const data_compoundSurnames = require('./data/compound_surnames.json')
 const data_lastnames = require('./data/last_names.json')
 const BOT_KEY = `${BOT_ID}:${BOT_TOKEN}`
@@ -39,7 +39,7 @@ function suspicious_name_filter(fullname) {
 async function hasBadUser(users) {
   const results = []
   for (const i of users) {
-    let desc = (i.first_name || '') + (i.last_name || '')
+    let desc = getFullName(i)
     const fullname = desc
     desc = desc.replace(/[. -_·\/\\]/g, '')
     desc = desc.toLowerCase()
@@ -183,11 +183,14 @@ async function checkDeleteMessage(message) {
 async function cleanForwardedMessagesByRU(message) {
   if (!message.forward_from && !message.forward_from_chat) return
   const usersStatus = hasBadUser([message.from])
+  const messageSourceTitle = getMessageSourceTitle(message)
   if (
-    usersStatus[0] &&
-    (usersStatus[0].bayes > BAYES_THERESHOLD || usersStatus[0].restrict)
+    (usersStatus[0] &&
+      (usersStatus[0].bayes > BAYES_THERESHOLD || usersStatus[0].restrict)) ||
+    bayes(messageSourceTitle) > BAYES_THERESHOLD
   ) {
     const rep = await deleteMessage(message.chat.id, message.message_id)
+    await restrictMember(message.chat.id, message.from.id, PRESERVE_TEXT)
     await sendMessage(
       ADMIN_UID,
       JSON.stringify({
